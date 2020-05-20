@@ -10,10 +10,19 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/masked-view": "^0.1.10",
+    "@react-navigation/bottom-tabs": "^5.4.7",
+    "@react-navigation/native": "^5.4.2",
     "react": "16.11.0",
     "react-native": "0.62.2",
+    "react-native-gesture-handler": "^1.6.1",
+    "react-native-reanimated": "^1.8.0",
+    "react-native-safe-area-context": "^1.0.2",
+    "react-native-screens": "^2.7.0",
     "react-native-video": "^4.4.5",
-    "react-native-webrtc": "^1.75.3"
+    "react-native-webrtc": "^1.75.3",
+    "react-native-youtube": "^2.0.1",
+    "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
