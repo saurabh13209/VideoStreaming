@@ -1,47 +1,42 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, AppState, BackHandler } from 'react-native';
 import Video from 'react-native-video';
 import YouTube from 'react-native-youtube';
 import io from 'socket.io-client';
 import { storeData, getData } from '../Store/Storage';
 import { name, user, baseUrl } from '../Store/Keys';
 
-export default Stream = () => {
+export default Stream = (props) => {
     const refVideo = useRef(null);
     const [isPlaying, setPlaying] = useState(true);
-
     const [role, setRole] = useState(null)
-    // Load and set video status
-    const [videoStatus, setVideoStatus] = useState({
-        currentTime: 0,
-        status: "Loading"
-    });
-    const data = [
-        {
-            "users": [
-                {
-                    "id": "saurabh13209",
-                    "role": "Host"
-                },
-                {
-                    "id": "vikas",
-                    "role": "User"
-                }
-            ],
-            "_id": "5ec558bf21cc53349f4e6fda",
-            "videoUrl": "1KMCKphn6CY",
-            "password": "",
-            "createdOn": "2020-05-20T16:20:15.606Z",
-            "__v": 0
+    this.videoStatus = "stopped";
+
+    BackHandler.addEventListener("hardwareBackPress", res => {
+        if (role == "Host") {
+            this.socket.emit('closeRoom', props.route.params.data["videoUrl"])
+        } else {
+            getData(user).then(res => {
+                var temp = []
+                props.route.params.data.users.forEach(user => {
+                    if (user["name"] != res) {
+                        temp = [
+                            ...temp,
+                            user
+                        ]
+                    }
+                })
+                console.log(temp)
+                this.socket.emit("removeUser", { videoUrl: props.route.params.data["videoUrl"], newUser: temp })
+            })
         }
-    ]
-
-
+        props.navigation.pop();
+        return true
+    })
     useEffect(() => {
         this.socket = io(baseUrl);
         getData(user).then(username => {
             this.socket.on("connect", () => {
-                console.log(this.socket.id)
                 this.socket.emit("updateUser", {
                     name: username,
                     id: this.socket.id
@@ -49,37 +44,43 @@ export default Stream = () => {
             })
             var roleTemp = null;
 
-            data[0]["users"].forEach((res, index) => {
-                console.log(res["id"]);
-                if (res["id"] == username) {
-                    roleTemp = data[0]["users"][index]["role"];
-                    setRole(data[0]["users"][index]["role"]);
+            props.route.params.data["users"].forEach((res, index) => {
+                console.log(res["name"]);
+                if (res["name"] == username) {
+                    roleTemp = props.route.params.data["users"][index]["role"];
+                    setRole(roleTemp);
                 }
             })
             setInterval(() => {
                 if (roleTemp == "Host") {
-                    refVideo.current.getCurrentTime().then(res => {
-                        tempVid = videoStatus;
-                        tempVid["currentTime"] = res;
-                        setVideoStatus(tempVid)
-                        this.socket.emit("setVideoData", tempVid)
-                    })
+                    if (refVideo.current != null) {
+                        refVideo.current.getCurrentTime().then(res => {
+                            this.currentTime = res;
+                            tempVid = {
+                                currentTime: res,
+                                status: this.videoStatus,
+                                videoUrl: props.route.params.data["videoUrl"]
+                            };
+                            this.socket.emit("setVideoData", tempVid)
+                        })
+                    }
                 }
             }, 500)
 
 
             this.socket.on("updateVideo", res => {
                 refVideo.current.getCurrentTime().then(videoTime => {
-                    if (!((videoTime > res.currentTime - 4) && (videoTime < res.currentTime + 4))) {
-                        var tem = parseInt(res.currentTime) + 4;
-                        console.log("update " + tem)
-                        refVideo.current.seekTo(tem)
-                        if (res.status == "playing") {
+                    if (res.status == "playing") {
+                        if (!((videoTime > res.currentTime - 4) && (videoTime < res.currentTime + 4))) {
+                            var tem = parseInt(res.currentTime) + 4;
+                            console.log("update " + tem)
+                            refVideo.current.seekTo(tem)
                             setPlaying(true)
-                        } else {
-                            setPlaying(false)
                         }
+                    } else {
+                        setPlaying(false)
                     }
+
                 })
 
             })
@@ -92,26 +93,27 @@ export default Stream = () => {
             <YouTube
                 ref={refVideo}
                 apiKey="AIzaSyCm7cvQdOwCnslbRqECA015md9Pj_n4ZnM"
-                videoId={data[0]["videoUrl"]}
+                videoId={props.route.params.data["videoUrl"]}
                 style={{ alignSelf: 'stretch', height: 300 }}
                 showinfo={true}
-                controls={role == "Host" ? 1 : 1}             //1 -> yes 2 -> no
+                onReady={res => {
+                    refVideo.current.seekTo(props.route.params.data.currentPosition)
+                    this.currentTime = props.route.params.data.currentPosition
+                    if (props.route.params.data.status == "playing") {
+                        setPlaying(true)
+                    } else {
+                        setPlaying(false)
+                    }
+                }}
+                controls={role == "Host" ? 1 : 0}             //1 -> yes 2 -> no
                 modestbranding={true}
                 play={isPlaying}
                 onChangeState={e => {
-                    temp = videoStatus;
-                    temp["status"] = e["state"];
-                    setVideoStatus(temp)
+                    this.videoStatus = e["state"]
                 }}
             />
-            <TouchableOpacity
-                onPress={() => {
-                    setPlaying(!isPlaying);
-                }}
-            >
-                <Text>Play</Text>
-            </TouchableOpacity>
 
+            <Text>{role}</Text>
         </View>
     );
 }

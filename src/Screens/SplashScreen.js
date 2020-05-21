@@ -71,8 +71,9 @@ export default SplashScren = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator>
-                {isLoading ? <Stack.Screen component={LoadingScreen} name="Splash" /> : isUser ? <Stack.Screen component={RoomScreen} name="Stream" /> : <Stack.Screen component={CreateAccountScreen} name="Room Screen" />}
+                {isLoading ? <Stack.Screen component={LoadingScreen} name="Splash" options={{ headerShown: false }} /> : isUser ? <Stack.Screen component={RoomScreen} name="Rooms" options={{ title: "Rooms" }} /> : <Stack.Screen component={CreateAccountScreen} name="CreateAccount" />}
                 <Stack.Screen component={YoutubeAddScreen} name="YoutubeLink" options={{ title: "Create Room" }} />
+                <Stack.Screen component={Stream} name="Stream" options={{ headerShown: false }} />
             </Stack.Navigator>
         </NavigationContainer >
     )

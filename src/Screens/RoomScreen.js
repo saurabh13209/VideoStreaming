@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
 import Axios from 'axios';
-import { baseUrl } from '../Store/Keys';
-import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
+import { baseUrl, user } from '../Store/Keys';
+import { FlatList } from 'react-native-gesture-handler';
 import { fontCustomSize } from '../function';
+import { storeData, getData } from '../Store/Storage';
 
 export default RoomScreen = (props) => {
 
@@ -29,10 +30,31 @@ export default RoomScreen = (props) => {
                         <FlatList
                             data={data}
                             renderItem={({ item }) => (
-                                <View>
-                                    <Text>{item.videoUrl}</Text>
-                                    <Text>{item.users.length}</Text>
-                                </View>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        getData(user).then(username => {
+                                            var tempUser = item.users;
+                                            tempUser = [
+                                                ...tempUser,
+                                                { name: username, role: "User" }
+                                            ]
+                                            console.log(tempUser)
+
+                                            Axios.post(baseUrl + "/api/room/addUser", {
+                                                videoUrl: item.videoUrl,
+                                                users: tempUser
+                                            }).then(() => {
+                                                props.navigation.navigate("Stream", { data: item })
+                                            })
+                                        })
+                                    }}
+                                    style={{ flexDirection: "row", margin: 10, padding: 10, borderRadius: 15, borderColor: "#d4d4d4", borderWidth: 1 }}>
+                                    <Image source={{ uri: item.image }} style={{ width: 70, flex: 2, height: 70, borderRadius: 50 }} />
+                                    <View style={{ marginLeft: 10, justifyContent: "center", flex: 8 }}>
+                                        <Text style={{ fontSize: fontCustomSize(14), fontWeight: "bold", color: "black" }}>{item.title}</Text>
+                                        <Text style={{ fontSize: fontCustomSize(12), color: "#858585" }}>{item.users.length} viewer</Text>
+                                    </View>
+                                </TouchableOpacity>
                             )}
                             keyExtractor={(item) => (item._id + "")}
                         />
