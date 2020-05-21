@@ -11,6 +11,11 @@ export default Stream = () => {
     const [isPlaying, setPlaying] = useState(true);
 
     const [role, setRole] = useState(null)
+    // Load and set video status
+    const [videoStatus, setVideoStatus] = useState({
+        currentTime: 0,
+        status: "Loading"
+    });
     const data = [
         {
             "users": [
@@ -33,77 +38,74 @@ export default Stream = () => {
 
 
     useEffect(() => {
+        this.socket = io('http://192.168.43.249:4000');
         getData(user).then(username => {
+            this.socket.on("connect", () => {
+                console.log(this.socket.id)
+                this.socket.emit("updateUser", {
+                    name: username,
+                    id: this.socket.id
+                })
+            })
+            var roleTemp = null;
+
             data[0]["users"].forEach((res, index) => {
                 console.log(res["id"]);
                 if (res["id"] == username) {
-                    console.log(username, data[0]["users"][index]["role"])
+                    roleTemp = data[0]["users"][index]["role"];
                     setRole(data[0]["users"][index]["role"]);
                 }
             })
-        })
-        this.socket = io('http://192.168.43.249:4000');
-        setInterval(() => {
-            if (role == "Host") {
-                refVideo.current.getCurrentTime().then(res => {
-                    this.socket.emit("setVideoData", {
-                        sec: res
+            setInterval(() => {
+                if (roleTemp == "Host") {
+                    refVideo.current.getCurrentTime().then(res => {
+                        tempVid = videoStatus;
+                        tempVid["currentTime"] = res;
+                        setVideoStatus(tempVid)
+                        this.socket.emit("setVideoData", tempVid)
                     })
-                })
-            } else {
-                this.socket.on("DataChanged", (res) => {
-                    console.log(res);
-                })
-            }
-        }, 2000)
+                }
+            }, 500)
+
+
+            this.socket.on("updateVideo", res => {
+                refVideo.current.seekTo(res.currentTime + 10)
+                if (res.status == "playing") {
+                    setPlaying(true)
+                } else {
+                    setPlaying(false)
+                }
+            })
+
+        })
     }, [])
 
     return (
         <View style={{ flex: 1 }}>
-            {/* <Video source={{ uri: "https://www.youtube.com/watch?v=1KMCKphn6CY&list=RD1KMCKphn6CY" }}   // Can be a URL or a local file.
-                ref={refVideo}
-                onBuffer={() => {
-                    console.log("B")
-                }}
-                onProgress={(d) => {
-                    if (old == d.currentTime) {
-                        console.log("Paused")
-                    } else {
-                        console.log("Playinh")
-                    }
-                    setOld(d.currentTime)
-                }}
-                onError={(e) => console.log(e)}               // Callback when video cannot be loaded
-                controls={true}
-                fullscreen={true}
-                fullscreenAutorotate={true}
-                fullscreenOrientation={"landscape"}
-                style={{
-                    flex: 1
-                }}
-                playInBackground={true}
-                playWhenInactive={true}
-                pictureInPicture={true}
-                bufferConfig={{
-                    minBufferMs: 15000,
-                    maxBufferMs: 50000,
-                    bufferForPlaybackMs: 2500,
-                    bufferForPlaybackAfterRebufferMs: 5000
-                }}
-            /> */}
             <YouTube
                 ref={refVideo}
                 apiKey="AIzaSyCm7cvQdOwCnslbRqECA015md9Pj_n4ZnM"
-                videoId={data[0]["videoUrl"]} // The YouTube video ID
-                play // control playback of video with true/false
-                loop // control whether the video should loop when ended
+                videoId={data[0]["videoUrl"]}
                 style={{ alignSelf: 'stretch', height: 300 }}
                 showinfo={true}
-                controls={role == "Host" ? 1 : 0}             //1 -> yes 2 -> no
+                controls={role == "Host" ? 1 : 1}             //1 -> yes 2 -> no
                 modestbranding={true}
                 play={isPlaying}
-                onChangeState={e => console.log(e)}  //playing
-                onProgress={e => console.log(e)}
+                onChangeState={e => {
+                    temp = videoStatus;
+                    temp["status"] = e["state"];
+                    if (role == "Host") {
+                        refVideo.current.getCurrentTime().then(res => {
+                            this.socket.emit("stateChange", {
+                                id: "1KMCKphn6CY",
+                                userId: ["Wi9oiJSZ4LitmAtjAAAF"],
+                                currentTime: res,
+                                status: e["state"]
+                            })
+                        })
+                    }
+                    setVideoStatus(temp)
+                }}
             />
             <TouchableOpacity
                 onPress={() => {
