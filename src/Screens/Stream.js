@@ -38,7 +38,7 @@ export default Stream = () => {
 
 
     useEffect(() => {
-        this.socket = io('http://192.168.43.249:4000');
+        this.socket = io('https://healthrx.herokuapp.com');
         getData(user).then(username => {
             this.socket.on("connect", () => {
                 console.log(this.socket.id)
@@ -69,12 +69,19 @@ export default Stream = () => {
 
 
             this.socket.on("updateVideo", res => {
-                refVideo.current.seekTo(res.currentTime + 10)
-                if (res.status == "playing") {
-                    setPlaying(true)
-                } else {
-                    setPlaying(false)
-                }
+                refVideo.current.getCurrentTime().then(videoTime => {
+                    if (!((videoTime > res.currentTime - 4) && (videoTime < res.currentTime + 4))) {
+                        var tem = parseInt(res.currentTime) + 4;
+                        console.log("update " + tem)
+                        refVideo.current.seekTo(tem)
+                        if (res.status == "playing") {
+                            setPlaying(true)
+                        } else {
+                            setPlaying(false)
+                        }
+                    }
+                })
+
             })
 
         })
@@ -94,16 +101,6 @@ export default Stream = () => {
                 onChangeState={e => {
                     temp = videoStatus;
                     temp["status"] = e["state"];
-                    if (role == "Host") {
-                        refVideo.current.getCurrentTime().then(res => {
-                            this.socket.emit("stateChange", {
-                                id: "1KMCKphn6CY",
-                                userId: ["Wi9oiJSZ4LitmAtjAAAF"],
-                                currentTime: res,
-                                status: e["state"]
-                            })
-                        })
-                    }
                     setVideoStatus(temp)
                 }}
             />
