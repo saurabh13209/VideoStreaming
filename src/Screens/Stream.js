@@ -4,7 +4,7 @@ import Video from 'react-native-video';
 import YouTube from 'react-native-youtube';
 import io from 'socket.io-client';
 import { storeData, getData } from '../Store/Storage';
-import { name, user } from '../Store/Keys';
+import { name, user, baseUrl } from '../Store/Keys';
 
 export default Stream = () => {
     const refVideo = useRef(null);
@@ -38,7 +38,7 @@ export default Stream = () => {
 
 
     useEffect(() => {
-        this.socket = io('https://healthrx.herokuapp.com');
+        this.socket = io(baseUrl);
         getData(user).then(username => {
             this.socket.on("connect", () => {
                 console.log(this.socket.id)

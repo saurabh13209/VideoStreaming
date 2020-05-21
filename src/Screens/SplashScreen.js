@@ -3,8 +3,11 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack'
 import { getData, storeData } from '../Store/Storage'
-import { user } from '../Store/Keys';
+import { user, baseUrl } from '../Store/Keys';
 import Stream from './Stream';
+import Axios from 'axios';
+import RoomScreen from './RoomScreen';
+import YoutubeAddScreen from './YoutubeAddScreen';
 
 const Stack = createStackNavigator();
 export default SplashScren = () => {
@@ -48,7 +51,11 @@ export default SplashScren = () => {
                 <TouchableOpacity
                     onPress={() => {
                         storeData(user, newName).then(() => {
-                            setIsUser(true)
+                            Axios.post(baseUrl + "/api/room/createUser", {
+                                name: newName
+                            }).then(res => {
+                                setIsUser(true)
+                            })
                         })
                     }}
                 >
@@ -64,7 +71,8 @@ export default SplashScren = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator>
-                {isLoading ? <Stack.Screen component={LoadingScreen} name="Splash" /> : isUser ? <Stack.Screen component={Stream} name="Stream" /> : <Stack.Screen component={CreateAccountScreen} name="Nam" options={{ headerShown: false }} />}
+                {isLoading ? <Stack.Screen component={LoadingScreen} name="Splash" /> : isUser ? <Stack.Screen component={RoomScreen} name="Stream" /> : <Stack.Screen component={CreateAccountScreen} name="Room Screen" />}
+                <Stack.Screen component={YoutubeAddScreen} name="YoutubeLink" options={{ title: "Create Room" }} />
             </Stack.Navigator>
         </NavigationContainer >
     )

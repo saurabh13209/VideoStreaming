@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import Axios from 'axios';
 
-export default LoginScreen = () => {
+export default YoutubeAddScreen = () => {
     return (
         <View>
             <Text>
-                Kic,e
+                Kickme
             </Text>
         </View>
     );
