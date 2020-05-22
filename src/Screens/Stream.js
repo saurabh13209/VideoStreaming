@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, AppState, BackHandler } from 'react-native';
+import { View, Text, AppState, BackHandler, Image } from 'react-native';
 import Video from 'react-native-video';
 import YouTube from 'react-native-youtube';
 import io from 'socket.io-client';
@@ -10,6 +10,10 @@ export default Stream = (props) => {
     const refVideo = useRef(null);
     const [isPlaying, setPlaying] = useState(true);
     const [role, setRole] = useState(null)
+    const [dime, setDime] = useState({
+        height: 300,
+        width: 400
+    });
     this.videoStatus = "stopped";
 
     removeUserFunc = () => {
@@ -27,16 +31,16 @@ export default Stream = (props) => {
         })
     }
 
-    AppState.addEventListener("change", res => {
-        if (res == "background") {
-            if (role == "Host") {
-                this.socket.emit("closeRoom", props.route.params.data["videoUrl"])
-            } else {
-                removeUserFunc();
-            }
-            props.navigation.pop();
-        }
-    })
+    // AppState.addEventListener("change", res => {
+    //     if (res == "background") {
+    //         if (role == "Host") {
+    //             this.socket.emit("closeRoom", props.route.params.data["videoUrl"])
+    //         } else {
+    //             removeUserFunc();
+    //         }
+    //         props.navigation.pop();
+    //     }
+    // })
 
     BackHandler.addEventListener("hardwareBackPress", res => {
         if (role == "Host") {
@@ -109,6 +113,7 @@ export default Stream = (props) => {
     return (
         <View style={{ flex: 1 }}>
             <YouTube
+                style={{ zIndex: 0 }}
                 ref={refVideo}
                 apiKey="AIzaSyCm7cvQdOwCnslbRqECA015md9Pj_n4ZnM"
                 videoId={props.route.params.data["videoUrl"]}
@@ -129,9 +134,13 @@ export default Stream = (props) => {
                 onChangeState={e => {
                     this.videoStatus = e["state"]
                 }}
+                onError={e => console.log(e)}
             />
 
-            <Text>{role}</Text>
+            <View style={{ backgroundColor: "blue" }}>
+                <Text>a</Text>
+            </View>
+
         </View>
     );
 }
