@@ -12,23 +12,37 @@ export default Stream = (props) => {
     const [role, setRole] = useState(null)
     this.videoStatus = "stopped";
 
+    removeUserFunc = () => {
+        getData(user).then(res => {
+            var temp = []
+            props.route.params.data.users.forEach(user => {
+                if (user["name"] != res) {
+                    temp = [
+                        ...temp,
+                        user
+                    ]
+                }
+            })
+            this.socket.emit("removeUser", { videoUrl: props.route.params.data["videoUrl"], newUser: temp })
+        })
+    }
+
+    AppState.addEventListener("change", res => {
+        if (res == "background") {
+            if (role == "Host") {
+                this.socket.emit("closeRoom", props.route.params.data["videoUrl"])
+            } else {
+                removeUserFunc();
+            }
+            props.navigation.pop();
+        }
+    })
+
     BackHandler.addEventListener("hardwareBackPress", res => {
         if (role == "Host") {
             this.socket.emit('closeRoom', props.route.params.data["videoUrl"])
         } else {
-            getData(user).then(res => {
-                var temp = []
-                props.route.params.data.users.forEach(user => {
-                    if (user["name"] != res) {
-                        temp = [
-                            ...temp,
-                            user
-                        ]
-                    }
-                })
-                console.log(temp)
-                this.socket.emit("removeUser", { videoUrl: props.route.params.data["videoUrl"], newUser: temp })
-            })
+            removeUserFunc();
         }
         props.navigation.pop();
         return true
@@ -72,17 +86,21 @@ export default Stream = (props) => {
                 refVideo.current.getCurrentTime().then(videoTime => {
                     if (res.status == "playing") {
                         if (!((videoTime > res.currentTime - 4) && (videoTime < res.currentTime + 4))) {
-                            var tem = parseInt(res.currentTime) + 4;
+                            var tem = parseInt(res.currentTime) + 2;
                             console.log("update " + tem)
                             refVideo.current.seekTo(tem)
-                            setPlaying(true)
                         }
+                        setPlaying(true)
                     } else {
                         setPlaying(false)
                     }
 
                 })
 
+            })
+
+            this.socket.on("closeVideo", res => {
+                props.navigation.pop();
             })
 
         })
@@ -105,7 +123,7 @@ export default Stream = (props) => {
                         setPlaying(false)
                     }
                 }}
-                controls={role == "Host" ? 1 : 0}             //1 -> yes 2 -> no
+                controls={role == "Host" ? 1 : 0}
                 modestbranding={true}
                 play={isPlaying}
                 onChangeState={e => {

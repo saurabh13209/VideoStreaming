@@ -5,7 +5,7 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { storeData, getData } from '../Store/Storage';
 import { user, baseUrl } from '../Store/Keys';
 
-export default YoutubeAddScreen = () => {
+export default YoutubeAddScreen = ({ navigation }) => {
 
     const [isLoading, setLoading] = useState(false);
     const [link, setLink] = useState("")
@@ -18,7 +18,7 @@ export default YoutubeAddScreen = () => {
                     setLink(res)
                 }}
                 value={link}
-                placeholder={"https://www.youtube.com/watch?v=Zi3VGpnvwWs"}
+                placeholder={"Zi3VGpnvwWs"}
                 style={{ borderBottomColor: "black", borderBottomWidth: 1, backgroundColor: "#f4f4f4" }} />
 
             <TextInput
@@ -33,7 +33,8 @@ export default YoutubeAddScreen = () => {
             <TouchableOpacity
                 onPress={() => {
                     setLoading(true)
-                    var id = link.substring(32, link.length).split("&")[0]
+                    // var id = link.substring(32, link.length).split("&")[0]
+                    var id = link
                     Axios.get("https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + id + "&key=AIzaSyCm7cvQdOwCnslbRqECA015md9Pj_n4ZnM").then(yData => {
                         getData(user).then(username => {
                             var snippet = yData.data.items[0].snippet
@@ -53,6 +54,9 @@ export default YoutubeAddScreen = () => {
                             }
                             Axios.post(baseUrl + "/api/room/createRoom", getData).then(res => {
                                 setLoading(false)
+                            }).then(() => {
+                                navigation.pop();
+                                navigation.navigate("Stream", { data: getData })
                             })
                         })
                     })

@@ -34,18 +34,28 @@ export default RoomScreen = (props) => {
                                     onPress={() => {
                                         getData(user).then(username => {
                                             var tempUser = item.users;
-                                            tempUser = [
-                                                ...tempUser,
-                                                { name: username, role: "User" }
-                                            ]
                                             console.log(tempUser)
-
-                                            Axios.post(baseUrl + "/api/room/addUser", {
-                                                videoUrl: item.videoUrl,
-                                                users: tempUser
-                                            }).then(() => {
-                                                props.navigation.navigate("Stream", { data: item })
+                                            var userArray = []
+                                            tempUser.forEach(user => {
+                                                userArray = [
+                                                    ...userArray,
+                                                    user["name"]
+                                                ]
                                             })
+                                            if (userArray.includes(username)) {
+                                                props.navigation.navigate("Stream", { data: item })
+                                            } else {
+                                                tempUser = [
+                                                    ...tempUser,
+                                                    { name: username, role: "User" }
+                                                ]
+                                                Axios.post(baseUrl + "/api/room/addUser", {
+                                                    videoUrl: item.videoUrl,
+                                                    users: tempUser
+                                                }).then(() => {
+                                                    props.navigation.navigate("Stream", { data: item })
+                                                })
+                                            }
                                         })
                                     }}
                                     style={{ flexDirection: "row", margin: 10, padding: 10, borderRadius: 15, borderColor: "#d4d4d4", borderWidth: 1 }}>
