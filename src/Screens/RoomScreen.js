@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
 import Axios from 'axios';
-import { baseUrl, user } from '../Store/Keys';
+import { baseUrl, user, flaskUrl } from '../Store/Keys';
 import { FlatList } from 'react-native-gesture-handler';
 import { fontCustomSize } from '../function';
 import { storeData, getData } from '../Store/Storage';
+import { captureScreen } from "react-native-view-shot";
+
 
 export default RoomScreen = (props) => {
 
     const [data, setData] = useState([]);
     const [isLoading, setLoading] = useState(true);
-
     useEffect(() => {
         setLoading(true)
         Axios.post(baseUrl + "/api/room/getRoom").then(res => {
@@ -68,6 +69,7 @@ export default RoomScreen = (props) => {
                             )}
                             keyExtractor={(item) => (item._id + "")}
                         />
+
                     </View>
             }
 
@@ -76,7 +78,30 @@ export default RoomScreen = (props) => {
             >
                 <TouchableOpacity
                     onPress={() => {
-                        props.navigation.navigate("YoutubeLink")
+                        captureScreen({
+                            format: "jpg",
+                            quality: 0.8
+                        })
+                            .then(
+
+                                link => {
+                                    var photo = {
+                                        uri: link,
+                                        type: 'image/jpeg',
+                                        name: 'photo.jpg',
+                                    };
+
+                                    var body = new FormData();
+                                    body.append('photo', photo);
+                                    Axios({
+                                        url: flaskUrl + '/upload',
+                                        data: photo,
+                                        method: "POST"
+                                    }).then().catch(e => console.log(e))
+                                },
+                                error => console.error("Oops, snapshot failed", error)
+                            );
+                        // props.navigation.navigate("YoutubeLink")
                     }}
                     style={{ flex: 1, height: fontCustomSize(50), width: fontCustomSize(50), justifyContent: "center", alignItems: 'center' }}>
                     <Text style={{ color: "white", fontSize: 40 }}>+</Text>

@@ -5,6 +5,10 @@ import YouTube from 'react-native-youtube';
 import io from 'socket.io-client';
 import { storeData, getData } from '../Store/Storage';
 import { name, user, baseUrl } from '../Store/Keys';
+import { captureScreen } from "react-native-view-shot";
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import AntIcon from 'react-native-vector-icons/AntDesign'
+import Axios from 'axios';
 
 export default Stream = (props) => {
     const refVideo = useRef(null);
@@ -16,6 +20,18 @@ export default Stream = (props) => {
     });
     this.videoStatus = "stopped";
     const bottomValue = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        captureScreen({
+            format: "jpg",
+            quality: 0.8
+        })
+            .then(
+
+                uri => console.log("Image saved to", uri),
+                error => console.error("Oops, snapshot failed", error)
+            );
+    }, [])
 
     removeUserFunc = () => {
         getData(user).then(res => {
@@ -92,9 +108,11 @@ export default Stream = (props) => {
                         })
                     }
                 }
-                console.log(this.isFullScreen)
-
             }, 500)
+
+            setInterval(() => {
+
+            }, 3000)
 
 
             this.socket.on("updateVideo", res => {
@@ -125,13 +143,25 @@ export default Stream = (props) => {
             <View
                 onLayout={r => setDime(r.nativeEvent.layout)}
             >
-                {/* <View style={{ position: "absolute", top: 0, height: Math.round(dime.height), right: 20, width: Math.round(dime.width) / 3, zIndex: 20 }}>
+                {/* <View style={{ position: "absolute", top: 0, height: Math.round(dime.height), right: 20, width: Math.round(dime.width) / 3, zIndex: 2 }}>
                     <Animated.Image
                         source={require("../../assests/image/heaty.png")}
                         resizeMode={"contain"}
                         style={{ position: "absolute", bottom: bottomValue, height: (Math.round(dime.height) / 3) - 20, width: (Math.round(dime.width) / 3) - 20 }}
                     />
                 </View> */}
+
+                <View style={{ position: "absolute", zIndex: 25, top: Math.round(dime.height) / 5, left: 20 }}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            Axios.post("", {}).then(res => console.log(res.data))
+                        }}
+                        style={{ backgroundColor: "white", borderRadius: 50 }}>
+                        <AntIcon name="infocirlceo" size={30} />
+                    </TouchableOpacity>
+                </View>
+
+
                 <YouTube
                     style={{ zIndex: 0 }}
                     ref={refVideo}
@@ -162,7 +192,7 @@ export default Stream = (props) => {
             </View>
 
             <View style={{ backgroundColor: "blue" }}>
-                <Text>a</Text>
+
             </View>
 
         </View >
