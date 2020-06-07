@@ -4,8 +4,8 @@ import Video from 'react-native-video';
 import YouTube from 'react-native-youtube';
 import io from 'socket.io-client';
 import { storeData, getData } from '../Store/Storage';
-import { name, user, baseUrl } from '../Store/Keys';
-import { captureScreen } from "react-native-view-shot";
+import { name, user, baseUrl, flaskUrl } from '../Store/Keys';
+import ViewShot, { captureScreen } from "react-native-view-shot";
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import AntIcon from 'react-native-vector-icons/AntDesign'
 import Axios from 'axios';
@@ -32,6 +32,7 @@ export default Stream = (props) => {
                 error => console.error("Oops, snapshot failed", error)
             );
     }, [])
+
 
     removeUserFunc = () => {
         getData(user).then(res => {
@@ -110,11 +111,6 @@ export default Stream = (props) => {
                 }
             }, 500)
 
-            setInterval(() => {
-
-            }, 3000)
-
-
             this.socket.on("updateVideo", res => {
                 refVideo.current.getCurrentTime().then(videoTime => {
                     if (res.status == "playing") {
@@ -137,6 +133,7 @@ export default Stream = (props) => {
 
         })
     }, [])
+
 
     return (
         <View style={{ flex: 1 }}>
@@ -161,34 +158,55 @@ export default Stream = (props) => {
                     </TouchableOpacity>
                 </View>
 
+                <ViewShot
+                    captureMode="continuous"
+                    options={{ format: "png", quality: 1 }}
+                    onCapture={res => {
+                        var photo = {
+                            uri: res,
+                            type: 'image/png',
+                            name: 'photo.png',
+                        };
 
-                <YouTube
-                    style={{ zIndex: 0 }}
-                    ref={refVideo}
-                    apiKey="AIzaSyCm7cvQdOwCnslbRqECA015md9Pj_n4ZnM"
-                    videoId={props.route.params.data["videoUrl"]}
-                    style={{ alignSelf: 'stretch', height: 300 }}
-                    showinfo={true}
-                    onReady={res => {
-                        refVideo.current.seekTo(props.route.params.data.currentPosition)
-                        this.currentTime = props.route.params.data.currentPosition
-                        if (props.route.params.data.status == "playing") {
-                            setPlaying(true)
-                        } else {
-                            setPlaying(false)
-                        }
-                    }}
-                    controls={role == "Host" ? 1 : 0}
-                    modestbranding={true}
-                    play={isPlaying}
-                    onChangeState={e => {
-                        this.videoStatus = e["state"]
-                    }}
-                    onChangeFullscreen={e => {
-                        this.isFullScreen = e.isFullscreen
-                    }}
-                    onError={e => console.log(e)}
-                />
+                        var body = new FormData();
+                        body.append('file', photo);
+                        Axios({
+                            url: flaskUrl + '/upload',
+                            data: body,
+                            method: "POST"
+                        }).then().catch(e => console.log(e))
+                    }
+                    }
+                >
+                    <YouTube
+                        style={{ zIndex: 0, height: 100, width: 100 }}
+                        ref={refVideo}
+                        apiKey="AIzaSyCm7cvQdOwCnslbRqECA015md9Pj_n4ZnM"
+                        videoId={props.route.params.data["videoUrl"]}
+                        style={{ alignSelf: 'stretch', height: 300 }}
+                        showinfo={true}
+                        onReady={res => {
+                            refVideo.current.seekTo(props.route.params.data.currentPosition)
+                            this.currentTime = props.route.params.data.currentPosition
+                            if (props.route.params.data.status == "playing") {
+                                setPlaying(true)
+                            } else {
+                                setPlaying(false)
+                            }
+                        }}
+                        controls={role == "Host" ? 1 : 0}
+                        modestbranding={true}
+                        play={isPlaying}
+                        onChangeState={e => {
+                            this.videoStatus = e["state"]
+                        }}
+                        onChangeFullscreen={e => {
+                            this.isFullScreen = e.isFullscreen
+                        }}
+                        onError={e => console.log(e)}
+                    />
+
+                </ViewShot>
             </View>
 
             <View style={{ backgroundColor: "blue" }}>

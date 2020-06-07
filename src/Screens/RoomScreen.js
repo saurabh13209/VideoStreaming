@@ -78,30 +78,7 @@ export default RoomScreen = (props) => {
             >
                 <TouchableOpacity
                     onPress={() => {
-                        captureScreen({
-                            format: "jpg",
-                            quality: 0.8
-                        })
-                            .then(
-
-                                link => {
-                                    var photo = {
-                                        uri: link,
-                                        type: 'image/jpeg',
-                                        name: 'photo.jpg',
-                                    };
-
-                                    var body = new FormData();
-                                    body.append('photo', photo);
-                                    Axios({
-                                        url: flaskUrl + '/upload',
-                                        data: photo,
-                                        method: "POST"
-                                    }).then().catch(e => console.log(e))
-                                },
-                                error => console.error("Oops, snapshot failed", error)
-                            );
-                        // props.navigation.navigate("YoutubeLink")
+                        props.navigation.navigate("YoutubeLink")
                     }}
                     style={{ flex: 1, height: fontCustomSize(50), width: fontCustomSize(50), justifyContent: "center", alignItems: 'center' }}>
                     <Text style={{ color: "white", fontSize: 40 }}>+</Text>
